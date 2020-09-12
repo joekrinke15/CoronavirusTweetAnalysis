@@ -1,2 +1,3 @@
-# Coronavirus-Social-Networks
-A social network analysis of coronavirus communication on Twitter.
+# MIMIC Dataset Analysis
+
+Examining the MIMIC dataset.
