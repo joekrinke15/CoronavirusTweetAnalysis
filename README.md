@@ -9,3 +9,7 @@ Cassie Wu, Statistical Science
 Felipe Buchbinder, MIDS
 
 Joseph Krinke, MIDS
+
+# Project Overview 
+
+![Flowchart](https://raw.githubusercontent.com/joekrinke15/MIMIC-Analysis/master/Readme/Flowchart.png)
