@@ -249,16 +249,18 @@ cooccurrence = go.Figure(data=data,
              layout= layout)
 cooccurrence.update_layout(title = 'Diseases Co-ccurring With ' + str(chosen_disease), title_x = .50)
 
+# create columns to store stuff!
+col1, col2, col3 = st.beta_columns(3)
 # Plot cooccurrence graph
-st.plotly_chart(cooccurrence, use_container_width=True)
+col1.plotly_chart(cooccurrence)
 
 # Plot hospital stay duration
 stay = px.histogram(filtered_data, x="staylength", title = 'Distribution of Length of Hospital Stay', labels = {"staylength":"Length of Hospital Stay", "count": "Frequency"})
 stay.update_layout(title_x = .50)
 
-st.plotly_chart(stay, use_container_width=True)
+col2.plotly_chart(stay)
 
 # Plot relative disease frequency 
 disease_freq = px.bar(disease_freq(diagnosis, chosen_disease), x='ethnicity', y='row_id', title = 'Percentage of Population with Disease', labels = {'ethnicity': 'Ethnicity', 'row_id':'Percentage of Population'})
 disease_freq.update_layout(title_x=.50)
-st.plotly_chart(disease_freq, use_container_width=True)
+col3.plotly_chart(disease_freq)
