@@ -25,6 +25,9 @@ from nltk import bigrams
 import itertools
 import pandas as pd
 
+# Use the full page instead of a narrow central column
+st.set_page_config(layout="wide")
+
 def matrix_to_df(diagnosis_data, n):
     """
     Creates a co-occurence matrix and converts it to a pandas dataframe.
@@ -145,6 +148,17 @@ def disease_freq(diagnosis, disease):
     scaled_data['row_id'] = scaled_data['row_id'] * 100
     return(scaled_data)
 
+# calculate relative disease frequency by admittyp
+def admit_freq(diagnosis):
+    """
+    Calculate where patients are admitted for a given disease. 
+    """
+    admit_total = diagnosis.groupby('admission_location').count()[['row_id']]
+    admit_total = admit_total.reset_index()
+    admit_total =admit_total.sort_values(by='row_id', ascending=False)
+    return(admit_total)
+
+
 @st.cache
 def get_patient_data():
     url = "http://data.insideairbnb.com/united-states/ny/new-york-city/2019-09-12/visualisations/listings.csv"
@@ -157,8 +171,20 @@ def get_admit_data():
     return pd.read_csv(os.path.join(path_to_download_folder, "Admit.csv"))
 admit = get_admit_data()
 
+
+# Change background color
+st.markdown("""
+<style>
+body {
+    color: #fff;
+    background-color: ##FFFFFF;
+}
+</style>
+    """, unsafe_allow_html=True)
+
+# Display title
+st.markdown("<h1 style='text-align: center; color: black;'>Disease Dashboard</h1>", unsafe_allow_html=True)
 # Pick a disease and use it to filter the data
-st.title("Select a Disease to Examine")
 chosen_disease = st.selectbox('Choose a disease:',sorted(list(set(diagnosis['short_title'].value_counts()[:100].index))))
 filtered_data = filter_data(diagnosis, chosen_disease)
 data_matrix = matrix_to_df(filtered_data, 25)
@@ -244,23 +270,33 @@ layout = go.Layout(
                 hovermode='closest',
                 margin=dict(b=20,l=5,r=5,t=40),
                 xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-                yaxis=dict(showgrid=False, zeroline=False, showticklabels=False))
+                yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+                height = 450,
+                width = 800)
 cooccurrence = go.Figure(data=data,
              layout= layout)
-cooccurrence.update_layout(title = 'Diseases Co-ccurring With ' + str(chosen_disease), title_x = .50)
+cooccurrence.update_layout(title = 'Diseases Co-ccurring with ' + str(chosen_disease), title_x = .50)
 
-# create columns to store stuff!
-col1, col2, col3 = st.beta_columns(3)
+#Create first 2 columns to hold graphs
+col1, col2 = st.beta_columns(2)
+
 # Plot cooccurrence graph
 col1.plotly_chart(cooccurrence)
 
+# Plot admission location frequency 
+admit_loc = px.pie(admit_freq(filtered_data), names='admission_location', values='row_id', title = 'Admission Locations',height = 450, width = 800)
+admit_loc.update_layout(title_x=.50)
+col2.plotly_chart(admit_loc)
+
 # Plot hospital stay duration
-stay = px.histogram(filtered_data, x="staylength", title = 'Distribution of Length of Hospital Stay', labels = {"staylength":"Length of Hospital Stay", "count": "Frequency"})
+# create columns to store stuff. Each new set of columns is a row. 
+col3, col4 = st.beta_columns(2)
+stay = px.histogram(filtered_data, x="staylength", title = 'Distribution of Length of Hospital Stay with ' + chosen_disease, labels = {"staylength":"Length of Hospital Stay", "count": "Frequency"}, width = 800, height = 450)
 stay.update_layout(title_x = .50)
 
-col2.plotly_chart(stay)
+col3.plotly_chart(stay,height=512,width=512)
 
 # Plot relative disease frequency 
-disease_freq = px.bar(disease_freq(diagnosis, chosen_disease), x='ethnicity', y='row_id', title = 'Percentage of Population with Disease', labels = {'ethnicity': 'Ethnicity', 'row_id':'Percentage of Population'})
+disease_freq = px.bar(disease_freq(diagnosis, chosen_disease), x='ethnicity', y='row_id', title = 'Percentage of Population with ' + chosen_disease, labels = {'ethnicity': 'Ethnicity', 'row_id':'Percentage of Population'},width = 800, height = 450)
 disease_freq.update_layout(title_x=.50)
-col3.plotly_chart(disease_freq)
+col4.plotly_chart(disease_freq,height=512,width=512)
