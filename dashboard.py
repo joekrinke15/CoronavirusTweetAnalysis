@@ -8,8 +8,6 @@ from IPython.display import Image
 from IPython.core.display import HTML
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
-import dash_core_components as dcc
-import dash_html_components as html
 import plotly.express as px
 import pandas as pd
 import numpy as np
