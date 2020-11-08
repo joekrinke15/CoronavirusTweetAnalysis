@@ -112,11 +112,12 @@ def topn_diagnoses(diagnosis, n):
         corpus.append(i.split(','))
     return (corpus)
 
-path_to_download_folder = str(os.path.join(Path.home(), "Downloads"))
+#path_to_download_folder = str(os.path.join(Path.home(), "Downloads"))
 
 @st.cache
 def get_diagnosis_data():
-    diagnosis = pd.read_csv(os.path.join(path_to_download_folder, "Diagnosis (2).csv"))
+    diagnosis = pd.read_csv("https://mimicdatasets.s3.amazonaws.com/diagnosis.csv")
+    diagnosis = pd.read_csv(os.path.join("Data/", "Diagnosis.csv"))
     # add time stayed in the hospital
     diagnosis['staylength']= pd.to_datetime(diagnosis['dischtime']) - pd.to_datetime(diagnosis['admittime'])
     diagnosis['staylength'] = pd.to_timedelta(diagnosis.staylength).dt.total_seconds()
@@ -160,14 +161,20 @@ def admit_freq(diagnosis):
 
 @st.cache
 def get_patient_data():
-    url = "http://data.insideairbnb.com/united-states/ny/new-york-city/2019-09-12/visualisations/listings.csv"
-    return pd.read_csv(os.path.join(path_to_download_folder, "Patient.csv"))
+<<<<<<< HEAD
+    return pd.read_csv("https://mimicdatasets.s3.amazonaws.com/Patient.csv")
+=======
+    return pd.read_csv(os.path.join("Data/", "Patient.csv"))
+>>>>>>> c6e7011fa88fd406ee29b09d9359e1f987525f2c
 patients = get_patient_data()
 
 @st.cache
 def get_admit_data():
-    url = "http://data.insideairbnb.com/united-states/ny/new-york-city/2019-09-12/visualisations/listings.csv"
-    return pd.read_csv(os.path.join(path_to_download_folder, "Admit.csv"))
+<<<<<<< HEAD
+    return pd.read_csv("https://mimicdatasets.s3.amazonaws.com/Admit.csv")
+=======
+    return pd.read_csv(os.path.join("Data/", "Admit.csv"))
+>>>>>>> c6e7011fa88fd406ee29b09d9359e1f987525f2c
 admit = get_admit_data()
 
 
