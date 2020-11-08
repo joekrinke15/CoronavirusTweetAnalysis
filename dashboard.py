@@ -117,7 +117,6 @@ def topn_diagnoses(diagnosis, n):
 @st.cache
 def get_diagnosis_data():
     diagnosis = pd.read_csv("https://mimicdatasets.s3.amazonaws.com/diagnosis.csv")
-    diagnosis = pd.read_csv(os.path.join("Data/", "Diagnosis.csv"))
     # add time stayed in the hospital
     diagnosis['staylength']= pd.to_datetime(diagnosis['dischtime']) - pd.to_datetime(diagnosis['admittime'])
     diagnosis['staylength'] = pd.to_timedelta(diagnosis.staylength).dt.total_seconds()
@@ -161,20 +160,12 @@ def admit_freq(diagnosis):
 
 @st.cache
 def get_patient_data():
-<<<<<<< HEAD
     return pd.read_csv("https://mimicdatasets.s3.amazonaws.com/Patient.csv")
-=======
-    return pd.read_csv(os.path.join("Data/", "Patient.csv"))
->>>>>>> c6e7011fa88fd406ee29b09d9359e1f987525f2c
 patients = get_patient_data()
 
 @st.cache
 def get_admit_data():
-<<<<<<< HEAD
     return pd.read_csv("https://mimicdatasets.s3.amazonaws.com/Admit.csv")
-=======
-    return pd.read_csv(os.path.join("Data/", "Admit.csv"))
->>>>>>> c6e7011fa88fd406ee29b09d9359e1f987525f2c
 admit = get_admit_data()
 
 
