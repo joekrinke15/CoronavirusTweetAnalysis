@@ -89,7 +89,8 @@ def gen_matrix(corpus):
 def filter_data(diagnosis, disease):
     """
     Creates a dataframe of people who have a given disease as one of their diagnoses.
-    Inputs:
+    Inputs: Diagnosis
+    Outputs: Filtered data
     """
     filtered_data = diagnosis.loc[diagnosis['subject_id'][diagnosis['short_title'] == disease]]
     return(filtered_data)
