@@ -126,11 +126,11 @@ def get_diagnosis_data():
     # regroup ethnicity
     diagnosis.loc[diagnosis.ethnicity.str.contains('^ASIAN'), 'ethnicity'] = 'ASIAN'
     diagnosis.loc[diagnosis.ethnicity.str.contains('^HISPANIC/LATINO'), 'ethnicity'] = 'HISPANIC OR LATINO'
-    diagnosis.loc[diagnosis.ethnicity.str.contains('^BLACK'), 'ethnicity'] = 'BLACK'
+    diagnosis.loc[diagnosis.ethnicity.str.contains('^BLACK'), 'ethnicity'] = 'BLACK/AFRICAN AMERICAN'
     diagnosis.loc[diagnosis.ethnicity.str.contains('^WHITE'), 'ethnicity'] = 'WHITE'
     diagnosis.loc[diagnosis.ethnicity == 'UNABLE TO OBTAIN', 'ethnicity'] = 'UNKNOWN/NOT SPECIFIED'
     main_cats = ['WHITE', 'BLACK/AFRICAN AMERICAN', 'UNKNOWN/NOT SPECIFIED', 
-             'HISPANIC OR LATINO', 'ASIAN', 'OTHER']
+             'HISPANIC OR LATINO', 'ASIAN']
     diagnosis.loc[~diagnosis.ethnicity.isin(main_cats), 'ethnicity'] = 'OTHER'
     return(diagnosis)
 diagnosis = get_diagnosis_data()
@@ -171,6 +171,27 @@ def get_admit_data():
     return pd.read_csv(os.path.join(path_to_download_folder, "Admit.csv"))
 admit = get_admit_data()
 
+@st.cache
+def get_merged_data():
+    return pd.merge(diagnosis, patients, on='subject_id', how='left')
+merged_data = get_merged_data()
+
+@st.cache
+def get_top_diseases():
+    data = pd.DataFrame(merged_data.short_title.value_counts())[:30]
+    data.columns = ['count']
+    return data
+top_diseases = get_top_diseases()
+
+@st.cache
+def get_top_5_admin_locations():
+    return pd.DataFrame(merged_data.admission_location.value_counts())[:5]
+locations = get_top_5_admin_locations()
+
+@st.cache
+def get_ethnicity():
+    return pd.DataFrame(merged_data.ethnicity.value_counts())
+ethnicity = get_ethnicity()
 
 # Change background color
 st.markdown("""
@@ -182,121 +203,198 @@ body {
 </style>
     """, unsafe_allow_html=True)
 
-# Display title
-st.markdown("<h1 style='text-align: center; color: black;'>Disease Dashboard</h1>", unsafe_allow_html=True)
-# Pick a disease and use it to filter the data
-chosen_disease = st.selectbox('Choose a disease:',sorted(list(set(diagnosis['short_title'].value_counts()[:100].index))))
-filtered_data = filter_data(diagnosis, chosen_disease)
-data_matrix = matrix_to_df(filtered_data, 25)
-
-# Create graph object and prepare for graphing
-g = nx.from_numpy_matrix(data_matrix.to_numpy())
-pos= nx.fruchterman_reingold_layout(g)
-N = list(data_matrix.columns)
-Node = g.nodes()
-E = g.edges()
-labels= N
-for n, p in pos.items():
-    g.nodes[n]['pos'] = p
-# Get sizes of nodes
-sizes = data_matrix.sum(axis=0).to_list()
-sizeref = 2. * max(sizes) / (10** 2)
-
-edge_x = []
-edge_y = []
-for edge in g.edges():
-    x0, y0 = g.nodes[edge[0]]['pos']
-    x1, y1 = g.nodes[edge[1]]['pos']
-    edge_x.append(x0)
-    edge_x.append(x1)
-    edge_x.append(None)
-    edge_y.append(y0)
-    edge_y.append(y1)
-    edge_y.append(None)
-
-node_adjacencies = []
-node_text = []
-i=0
-for node, adjacencies in enumerate(g.adjacency()):
-    node_adjacencies.append(len(adjacencies[1]))
-    node_text.append('Disease:' +str(labels[i]) +', Number of Connections: '+str(int(sizes[i])))
-    i+=1
-edge_trace = go.Scatter(
-    x=edge_x, y=edge_y,
-    line=dict(width= .4, color='#888'),
-    hoverinfo='none',
-    mode='lines')
-
-node_x = []
-node_y = []
-for node in g.nodes():
-    x, y = g.nodes[node]['pos']
-    node_x.append(x)
-    node_y.append(y)
-    
-
-node_trace = go.Scatter(
-    x=node_x, y=node_y,
-    mode='markers',
-    hoverinfo='text',
-    marker=dict(
-        showscale=True,
-        # colorscale options
-        #'greys' | 'YlgnBu' | 'greens' | 'YlOrRd' | 'Bluered' | 'RdBu' |
-        #'Reds' | 'Blues' | 'Picnic' | 'Rainbow' | 'Portland' | 'Jet' |
-        #'Hot' | 'Blackbody' | 'Earth' | 'Electric' | 'Viridis' |
-        colorscale='YlgnBu',
-        reversescale=False,
-        color=[],
-        size=10,
-        colorbar=dict(
-            thickness=15,
-            title='Node Connections',
-            xanchor='left',
-            titleside='right'
-        ),
-        line_width=2))
 
 
-node_trace.marker.color = sizes
-node_trace.marker.size = [s for  s in sizes]
-node_trace.marker.sizeref = sizeref
-node_trace.text = node_text
 
-data=[edge_trace, node_trace]
-layout = go.Layout(
-                titlefont_size=16,
-                showlegend=False,
-                hovermode='closest',
-                margin=dict(b=20,l=5,r=5,t=40),
-                xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-                yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-                height = 450,
-                width = 800)
-cooccurrence = go.Figure(data=data,
-             layout= layout)
-cooccurrence.update_layout(title = 'Diseases Co-ccurring with ' + str(chosen_disease), title_x = .50)
+#Layout
 
-#Create first 2 columns to hold graphs
-col1, col2 = st.beta_columns(2)
+#sidebar options
+topic = st.sidebar.radio('Choose Topic to Explore', ('General Trends', 'Demographics ==> Diseases',
 
-# Plot cooccurrence graph
-col1.plotly_chart(cooccurrence)
+                                   'Diseases ==> Demographics', 'Co-occurrence of Diseases'))
+# General Trends Dashboard
+if topic == 'General Trends':
 
-# Plot admission location frequency 
-admit_loc = px.pie(admit_freq(filtered_data), names='admission_location', values='row_id', title = 'Admission Locations',height = 450, width = 800)
-admit_loc.update_layout(title_x=.50)
-col2.plotly_chart(admit_loc)
+    # About
+    expander_bar = st.beta_expander('About')
+    expander_bar.markdown("""
+    **Data Source**: MIMIC-III Critical Care Database developed by the MIT Lab for Computational Physiology \n 
+    **Data**: Health-related data of over 40 000 patients who stayed in critical care units in Beth Israel Israel Deaconess Medical Center (Boston, MA) between 2001 and 2012. \n
+    **Python Libraries**: streamlit, pandas, plotly \n
+    **References**: [Streamlit documentation](https://docs.streamlit.io/en/stable/api.html), [Mimic dataset](https://mimic.physionet.org/about/mimic/)
+    """)
 
-# Plot hospital stay duration
-# create columns to store stuff. Each new set of columns is a row. 
-col3, col4 = st.beta_columns(2)
-stay = px.histogram(filtered_data, x="staylength", title = 'Distribution of Length of Hospital Stay with ' + chosen_disease, labels = {"staylength":"Length of Hospital Stay", "count": "Frequency"}, width = 800, height = 450)
-stay.update_layout(title_x = .50)
+    # Display title
+    st.markdown("<h1 style='text-align: center; color: black;'>General Trends of MIMIC Dataset</h1>", unsafe_allow_html=True)
+    # Create first 2 columns to hold graphs
+    col1, col2 = st.beta_columns(2)
 
-col3.plotly_chart(stay,height=512,width=512)
+    #plot Top Most Frequent Diseases plot
+    n = col1.slider('N of Diseases', 1, 30, 5)
+    # plot bar chart
+    fig1 = go.Figure(go.Bar(
+        x=top_diseases[:n].index,
+        y=top_diseases[:n]['count'], marker_color='#FE6692'
+    ))
+    fig1.update_layout(template='ggplot2', title = f'Top {n} Most Frequent Diseases')
 
-# Plot relative disease frequency 
-disease_freq = px.bar(disease_freq(diagnosis, chosen_disease), x='ethnicity', y='row_id', title = 'Percentage of Population with ' + chosen_disease, labels = {'ethnicity': 'Ethnicity', 'row_id':'Percentage of Population'},width = 800, height = 450)
-disease_freq.update_layout(title_x=.50)
-col4.plotly_chart(disease_freq,height=512,width=512)
+    col1.plotly_chart(fig1, use_container_width=True)
+
+# Plot admission location frequency
+    fig2 = px.pie(locations, names=locations.index, values='admission_location', height = 550, width = 800)
+
+    fig2.update_layout(title='Top 5 Admission Locations')
+    fig2.update_layout(title_x=.50)
+    col2.plotly_chart(fig2, use_container_width=True)
+
+
+# Create second 2 columns to hold graphs
+
+    # plot Patients by Gender pie
+    col3, col4 = st.beta_columns(2)
+    gender = pd.DataFrame(merged_data.gender.value_counts())
+    gender.index = ['Male', 'Female']
+    fig3 = px.pie(gender, names=gender.index, values='gender')
+    fig3.update_layout(title='Patients by Gender')
+    col3.plotly_chart(fig3, use_container_width=True)
+
+    #plot Ethnicity
+    fig4 = go.Figure(go.Bar(
+        x=ethnicity.index,
+        y=ethnicity['ethnicity'], marker_color='#19D3F3'
+    ))
+    fig4.update_layout(template='ggplot2', title='Patients by Ethnicity')
+    col4.plotly_chart(fig4, use_container_width=True)
+#Demographics ==> Diseases Dashboard
+elif topic == 'Demographics ==> Diseases':
+    # Display title
+    st.markdown("<h1 style='text-align: center; color: black;'>Demographics to Diseases</h1>", unsafe_allow_html=True)
+   # Pick a disease and use it to filter the data
+    chosen_disease = st.selectbox('Choose a disease:',
+                                  sorted(list(set(diagnosis['short_title'].value_counts()[:100].index))))
+    filtered_data = filter_data(diagnosis, chosen_disease)
+    data_matrix = matrix_to_df(filtered_data, 25)
+
+    # Create graph object and prepare for graphing
+    g = nx.from_numpy_matrix(data_matrix.to_numpy())
+    pos = nx.fruchterman_reingold_layout(g)
+    N = list(data_matrix.columns)
+    Node = g.nodes()
+    E = g.edges()
+    labels = N
+    for n, p in pos.items():
+        g.nodes[n]['pos'] = p
+    # Get sizes of nodes
+    sizes = data_matrix.sum(axis=0).to_list()
+    sizeref = 2. * max(sizes) / (10 ** 2)
+
+    edge_x = []
+    edge_y = []
+    for edge in g.edges():
+        x0, y0 = g.nodes[edge[0]]['pos']
+        x1, y1 = g.nodes[edge[1]]['pos']
+        edge_x.append(x0)
+        edge_x.append(x1)
+        edge_x.append(None)
+        edge_y.append(y0)
+        edge_y.append(y1)
+        edge_y.append(None)
+
+    node_adjacencies = []
+    node_text = []
+    i = 0
+    for node, adjacencies in enumerate(g.adjacency()):
+        node_adjacencies.append(len(adjacencies[1]))
+        node_text.append('Disease:' + str(labels[i]) + ', Number of Connections: ' + str(int(sizes[i])))
+        i += 1
+    edge_trace = go.Scatter(
+        x=edge_x, y=edge_y,
+        line=dict(width=.4, color='#888'),
+        hoverinfo='none',
+        mode='lines')
+
+    node_x = []
+    node_y = []
+    for node in g.nodes():
+        x, y = g.nodes[node]['pos']
+        node_x.append(x)
+        node_y.append(y)
+
+    node_trace = go.Scatter(
+        x=node_x, y=node_y,
+        mode='markers',
+        hoverinfo='text',
+        marker=dict(
+            showscale=True,
+            # colorscale options
+            # 'greys' | 'YlgnBu' | 'greens' | 'YlOrRd' | 'Bluered' | 'RdBu' |
+            # 'Reds' | 'Blues' | 'Picnic' | 'Rainbow' | 'Portland' | 'Jet' |
+            # 'Hot' | 'Blackbody' | 'Earth' | 'Electric' | 'Viridis' |
+            colorscale='YlgnBu',
+            reversescale=False,
+            color=[],
+            size=10,
+            colorbar=dict(
+                thickness=15,
+                title='Node Connections',
+                xanchor='left',
+                titleside='right'
+            ),
+            line_width=2))
+
+    node_trace.marker.color = sizes
+    node_trace.marker.size = [s for s in sizes]
+    node_trace.marker.sizeref = sizeref
+    node_trace.text = node_text
+
+    data = [edge_trace, node_trace]
+    layout = go.Layout(
+        titlefont_size=16,
+        showlegend=False,
+        hovermode='closest',
+        margin=dict(b=20, l=5, r=5, t=40),
+        xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+        yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+        height=450,
+        width=800)
+    cooccurrence = go.Figure(data=data,
+                             layout=layout)
+    cooccurrence.update_layout(title='Diseases Co-ccurring with ' + str(chosen_disease), title_x=.50)
+
+
+
+
+    #Create first 2 columns to hold graphs
+    col1, col2 = st.beta_columns(2)
+
+    # Plot cooccurrence graph
+    col1.plotly_chart(cooccurrence, use_container_width=True)
+
+    # Plot admission location frequency
+    admit_loc = px.pie(admit_freq(filtered_data), names='admission_location', values='row_id', title = 'Admission Locations',height = 450, width = 800)
+    admit_loc.update_layout(title_x=.50)
+    col2.plotly_chart(admit_loc, use_container_width=True)
+
+    # Plot hospital stay duration
+    # create columns to store stuff. Each new set of columns is a row.
+    col3, col4 = st.beta_columns(2)
+    stay = px.histogram(filtered_data, x="staylength", title = 'Distribution of Length of Hospital Stay with ' + chosen_disease, labels = {"staylength":"Length of Hospital Stay", "count": "Frequency"}, width = 800, height = 450)
+    stay.update_layout(title_x = .50)
+
+    #col3.plotly_chart(stay,height=512,width=512)
+    col3.plotly_chart(stay, use_container_width=True)
+    # Plot relative disease frequency
+    disease_freq = px.bar(disease_freq(diagnosis, chosen_disease), x='ethnicity', y='row_id', title = 'Percentage of Population with ' + chosen_disease, labels = {'ethnicity': 'Ethnicity', 'row_id':'Percentage of Population'},width = 800, height = 450)
+    disease_freq.update_layout(title_x=.50)
+    col4.plotly_chart(disease_freq,use_container_width=True)
+# Diseases ==> Demographics Dashboard
+elif topic == 'Diseases ==> Demographics':
+    # Display title
+    st.markdown("<h1 style='text-align: center; color: black;'>Diseases to Demographics </h1>",
+                unsafe_allow_html=True)
+
+# Diseases ==> Demographics Dashboard
+elif topic == 'Co-occurrence of Diseases':
+    # Display title
+    st.markdown("<h1 style='text-align: center; color: black;'>Co-occurrence of Diseases Analysis  </h1>",
+                unsafe_allow_html=True)
