@@ -411,7 +411,8 @@ elif topic == 'Co-occurrence of Diseases':
                 unsafe_allow_html=True)
     
     arules = get_association_rules_data()
-    arules.columns
+    chosen_disease = st.selectbox('Choose a disease:',
+                                  sorted(list(set(arules.A))))
     
     
     
