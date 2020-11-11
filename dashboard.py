@@ -202,8 +202,11 @@ body {
 
 @st.cache
 def get_association_rules_data():
+    #load data
     data = pd.read_csv('Association_Rules.csv')
+    #drop first, unnamed column
     data = data.drop(columns='Unnamed: 0')
+    #drop initial label
     return(data)
 
 
