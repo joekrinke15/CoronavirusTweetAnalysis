@@ -2,13 +2,13 @@
 Project for BIOS 823: Statistical Programming for Big Data
 
 # Team Big Data
-Alena Kalodzitsa, MIDS
+[Alena Kalodzitsa](https://github.com/Klalena), MIDS
 
-Cassie Wu, Statistical Science
+[Cassie Wu](https://github.com/cassie1102), Statistical Science
 
-Felipe Buchbinder, MIDS
+[Felipe Buchbinder](https://github.com/felbuch), MIDS
 
-Joseph Krinke, MIDS
+[Joseph Krinke](https://github.com/joekrinke15), MIDS
 
 # Project Overview
 
