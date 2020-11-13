@@ -21,7 +21,6 @@ import streamlit as st
 import nltk
 from nltk import bigrams
 import itertools
-import pandas as pd
 
 # Use the full page instead of a narrow central column
 st.set_page_config(layout="wide")
@@ -190,6 +189,28 @@ def get_ethnicity():
     return pd.DataFrame(merged_data.ethnicity.value_counts())
 ethnicity = get_ethnicity()
 
+@st.cache
+def ethnicity_diagnosis(ethnicity):
+    """
+    Return the top 10 diseases for a selected ethnicity
+    Inputs: ethinicity
+    Outputs: 10 diagnosis names
+    """
+    top10diag = pd.DataFrame(merged_data[merged_data['ethnicity'] == ethnicity]['short_title'].value_counts()[:10])
+    top10diag.columns = ['count']
+    return(top10diag)
+
+@st.cache
+def gender_diagnosis(gender):
+    """
+    Return the top 10 diseases for a selected gender
+    Inputs: gender
+    Outputs: 10 diagnosis names
+    """
+    top10diag = pd.DataFrame(merged_data[merged_data['gender'] == gender]['short_title'].value_counts()[:10])
+    top10diag.columns = ['count']
+    return(top10diag)
+
 # Change background color
 st.markdown("""
 <style>
@@ -262,6 +283,7 @@ if topic == 'General Trends':
     ))
     fig4.update_layout(template='ggplot2', title='Patients by Ethnicity')
     col4.plotly_chart(fig4, use_container_width=True)
+    
 #Demographics ==> Diseases Dashboard
 elif topic == 'Demographics ==> Diseases':
     # Display title
@@ -384,14 +406,53 @@ elif topic == 'Demographics ==> Diseases':
     disease_freq = px.bar(disease_freq(diagnosis, chosen_disease), x='ethnicity', y='row_id', title = 'Percentage of Population with ' + chosen_disease, labels = {'ethnicity': 'Ethnicity', 'row_id':'Percentage of Population'},width = 800, height = 450)
     disease_freq.update_layout(title_x=.50)
     col4.plotly_chart(disease_freq,use_container_width=True)
+    
 # Diseases ==> Demographics Dashboard
 elif topic == 'Diseases ==> Demographics':
     # Display title
     st.markdown("<h1 style='text-align: center; color: black;'>Diseases to Demographics </h1>",
                 unsafe_allow_html=True)
+    
+    # Create first 2 columns to hold graphs
+    col1, col2 = st.beta_columns(2)
+
+    # plot top 10 Most Frequent Diseases for given ethnicity
+    ethnicity = st.selectbox('Choose an ethnicity:', 
+                             sorted(list(merged_data.ethnicity.value_counts().index)))
+    
+    eth_fig = go.Figure(go.Bar(
+        x=ethnicity_diagnosis(ethnicity).index,
+        y=ethnicity_diagnosis(ethnicity)['count'], marker_color='light blue'
+    ))
+    eth_fig.update_layout(template='ggplot2', title = f'Top 10 Diseases - {ethnicity}')
+
+    col1.plotly_chart(eth_fig, use_container_width=True)
+    
+    # plot top 10 Most Frequent Diseases for given gender
+    gender = st.selectbox('Choose an ethnicity:', 
+                        ['F', 'M'])
+
+    gender_fig = go.Figure(go.Bar(
+        x=gender_diagnosis(gender).index,
+        y=gender_diagnosis(gender)['count'], marker_color='light blue'
+    ))
+    gender_fig.update_layout(template='ggplot2', title = f'Top 10 Diseases - {gender}')
+    col2.plotly_chart(gender_fig, use_container_width=True)
 
 # Diseases ==> Demographics Dashboard
 elif topic == 'Co-occurrence of Diseases':
     # Display title
     st.markdown("<h1 style='text-align: center; color: black;'>Co-occurrence of Diseases Analysis  </h1>",
                 unsafe_allow_html=True)
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
