@@ -24,7 +24,7 @@ import itertools
 import pandas as pd
 
 # Use the full page instead of a narrow central column
-st.set_page_config(layout="wide")
+#st.set_page_config(layout="wide")
 
 def matrix_to_df(diagnosis_data, n):
     """
@@ -200,7 +200,14 @@ body {
 </style>
     """, unsafe_allow_html=True)
 
-
+@st.cache
+def get_association_rules_data():
+    #load data
+    data = pd.read_csv('Association_Rules.csv')
+    #drop first, unnamed column
+    data = data.drop(columns='Unnamed: 0')
+    #drop initial label
+    return(data)
 
 
 #Layout
@@ -209,6 +216,13 @@ body {
 topic = st.sidebar.radio('Choose Topic to Explore', ('General Trends', 'Demographics ==> Diseases',
 
                                    'Diseases ==> Demographics', 'Co-occurrence of Diseases'))
+
+################################
+#### For testing only
+topic = 'Co-occurrence of Diseases'
+#################################
+
+
 # General Trends Dashboard
 if topic == 'General Trends':
 
@@ -395,3 +409,16 @@ elif topic == 'Co-occurrence of Diseases':
     # Display title
     st.markdown("<h1 style='text-align: center; color: black;'>Co-occurrence of Diseases Analysis  </h1>",
                 unsafe_allow_html=True)
+    
+    arules = get_association_rules_data()
+    chosen_disease = st.selectbox('Choose a disease:',
+                                  sorted(list(set(arules.A))))
+    
+    
+    
+    
+    
+    
+    
+    
+    
