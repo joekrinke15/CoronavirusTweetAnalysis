@@ -412,13 +412,16 @@ elif topic == 'Diseases ==> Demographics':
     # Display title
     st.markdown("<h1 style='text-align: center; color: black;'>Diseases to Demographics </h1>",
                 unsafe_allow_html=True)
-    
-    # Create first 2 columns to hold graphs
-    col1, col2 = st.beta_columns(2)
+   
 
     # plot top 10 Most Frequent Diseases for given ethnicity
     ethnicity = st.selectbox('Choose an ethnicity:', 
                              sorted(list(merged_data.ethnicity.value_counts().index)))
+    gender = st.selectbox('Choose a gender:', 
+                        ['F', 'M'])
+    
+     # Create first 2 columns to hold graphs
+    col1, col2 = st.beta_columns(2)
     
     eth_fig = go.Figure(go.Bar(
         x=ethnicity_diagnosis(ethnicity).index,
@@ -429,8 +432,7 @@ elif topic == 'Diseases ==> Demographics':
     col1.plotly_chart(eth_fig, use_container_width=True)
     
     # plot top 10 Most Frequent Diseases for given gender
-    gender = st.selectbox('Choose an ethnicity:', 
-                        ['F', 'M'])
+    
 
     gender_fig = go.Figure(go.Bar(
         x=gender_diagnosis(gender).index,
