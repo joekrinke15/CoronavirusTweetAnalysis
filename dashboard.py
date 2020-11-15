@@ -190,26 +190,38 @@ def get_ethnicity():
 ethnicity = get_ethnicity()
 
 @st.cache
-def ethnicity_diagnosis(ethnicity):
-    """
-    Return the top 10 diseases for a selected ethnicity
-    Inputs: ethinicity
-    Outputs: 10 diagnosis names
-    """
-    top10diag = pd.DataFrame(merged_data[merged_data['ethnicity'] == ethnicity]['short_title'].value_counts()[:10])
-    top10diag.columns = ['count']
-    return(top10diag)
+def add_age():
+    merged_data['admittime'] = pd.to_datetime(merged_data['admittime']).dt.date
+    merged_data['dob'] = pd.to_datetime(merged_data['dob']).dt.date
+    merged_data['age_num'] = merged_data.apply(lambda e: (e['admittime'] - e['dob']).days/365, axis=1)
+    # transform age into categorical variable
+    # create a list of our conditions
+    conditions = [
+    (merged_data['age_num'] <= 25),
+    (merged_data['age_num'] > 25) & (merged_data['age_num'] <= 50),
+    (merged_data['age_num'] > 50) & (merged_data['age_num'] <= 75),
+    (merged_data['age_num'] > 75)
+    ]
+    # create a list of the values we want to assign for each condition
+    values = ['Under 25', '25 to 50', '50 to 75', 'Above 75']
+    # create a new column and use np.select to assign values to it using our lists as arguments
+    merged_data['age'] = np.select(conditions, values)
+    return merged_data
+merged_data_age = add_age()
 
 @st.cache
-def gender_diagnosis(gender):
+def demo_disease(ethnicity, gender, age):
     """
-    Return the top 10 diseases for a selected gender
-    Inputs: gender
-    Outputs: 10 diagnosis names
+    Return the top 10 diseases and staylength for selected demographic information
+    Inputs: ethnicity, gender, age
+    Outputs: 10 diagnosis names, staylength
     """
-    top10diag = pd.DataFrame(merged_data[merged_data['gender'] == gender]['short_title'].value_counts()[:10])
+    condition = (merged_data_age['age'] == age) & (merged_data_age['ethnicity'] == ethnicity) & (merged_data_age['gender'] == gender)
+    top10diag = pd.DataFrame(merged_data_age[condition]['short_title'].value_counts()[:10])
     top10diag.columns = ['count']
-    return(top10diag)
+    staylength = pd.DataFrame(merged_data_age[condition]['staylength'])
+    staylength.columns = ['staylength']
+    return top10diag, staylength
 
 # Change background color
 st.markdown("""
@@ -416,36 +428,38 @@ elif topic == 'Diseases ==> Demographics':
 
     # plot top 10 Most Frequent Diseases for given ethnicity
     ethnicity = st.selectbox('Choose an ethnicity:', 
-                             sorted(list(merged_data.ethnicity.value_counts().index)))
+                             sorted(list(merged_data_age.ethnicity.value_counts().index)))
     gender = st.selectbox('Choose a gender:', 
                         ['F', 'M'])
+    age = st.selectbox('Choose an age:', 
+                       sorted(list(merged_data_age.age.value_counts().index)))
+    
+    # the dataframe for plotting
+    top10diag, staylength = demo_disease(ethnicity, gender, age)
     
      # Create first 2 columns to hold graphs
     col1, col2 = st.beta_columns(2)
     
-    eth_fig = go.Figure(go.Bar(
-        x=ethnicity_diagnosis(ethnicity).index,
-        y=ethnicity_diagnosis(ethnicity)['count'], marker_color='light blue'
+    # plot top 10 Most Frequent Diseases for given eth, gender and age
+    diag_fig = go.Figure(go.Bar(
+        x=top10diag.index,
+        y=top10diag['count'], marker_color='light blue'
     ))
-    eth_fig.update_layout(template='ggplot2', title = f'Top 10 Diseases - {ethnicity}')
+    diag_fig.update_layout(template='ggplot2', title = 'Top 10 Most Frequent Diseases')
 
-    col1.plotly_chart(eth_fig, use_container_width=True)
+    col1.plotly_chart(diag_fig, use_container_width=True)
     
-    # plot top 10 Most Frequent Diseases for given gender
-    
-
-    gender_fig = go.Figure(go.Bar(
-        x=gender_diagnosis(gender).index,
-        y=gender_diagnosis(gender)['count'], marker_color='light blue'
-    ))
-    gender_fig.update_layout(template='ggplot2', title = f'Top 10 Diseases - {gender}')
-    col2.plotly_chart(gender_fig, use_container_width=True)
+    # plot staylength distribution for given eth, gender and age
+    stay_fig = px.histogram(staylength, x="staylength", title = 'Distribution of Length of Hospital Stay', labels = {"staylength":"Length of Hospital Stay", "count": "Frequency"}, width = 800, height = 450)
+    stay_fig.update_layout(title_x = .50)
+    col2.plotly_chart(stay_fig, use_container_width=True)
 
 # Diseases ==> Demographics Dashboard
 elif topic == 'Co-occurrence of Diseases':
     # Display title
     st.markdown("<h1 style='text-align: center; color: black;'>Co-occurrence of Diseases Analysis  </h1>",
                 unsafe_allow_html=True)
+    
     
     
     
