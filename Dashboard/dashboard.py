@@ -353,7 +353,7 @@ if topic == 'General Trends':
     fig4.update_layout(template='ggplot2', title='Patients by Ethnicity')
     col4.plotly_chart(fig4, use_container_width=True)
     
-#Demographics ==> Diseases Dashboard
+# Disease to demographics dashboard
 elif topic == 'Disease to Demographics':
     # Display title
     st.markdown("<h1 style='text-align: center; color: black;'>Disease to Demographics</h1>", unsafe_allow_html=True)
@@ -435,7 +435,7 @@ elif topic == 'Demographics to Disease':
     stay_fig.update_layout(title_x = .50)
     col2.plotly_chart(stay_fig, use_container_width=True)
 
-# Diseases ==> Demographics Dashboard
+# Market basket analysis
 elif topic == 'Market Basket Analysis':
     # Display title
     st.markdown("<h1 style='text-align: center; color: black;'>Market Basket Analysis of Diseases</h1>",
