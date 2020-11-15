@@ -366,6 +366,7 @@ if topic == 'General Trends':
     fig4.update_layout(template='ggplot2', title='Patients by Ethnicity', yaxis_title = 'Frequency', xaxis_title = 'Ethnicity')
     col4.plotly_chart(fig4, use_container_width=True)
     
+
 # Disease to demographics
 elif topic == 'Disease to Demographics':
     # Display title
