@@ -12,7 +12,7 @@ Project for BIOS 823: Statistical Programming for Big Data
 
 # Project Overview
 
-The goal of our project is to create a dashboard that analyzes trends in the [MIMIC](https://mimic.physionet.org/) dataset. This dataset contains ~60,000 de-identified records of patients admitted to the Beth Israel Deaconess Medical Center from 2001-2002. The data contains information on demographics, vital signs, laboratory tests, and more, but our main focus is on identifying which diseases occur together and how disease prevalence varies across demographics. This dashboard could help hospital administrators understand the health needs of demographic groups in their community. Additionally, it could help physicians identify what preventable chronic diseases are causing more serious conditions. 
+The goal of our project is to create a dashboard that analyzes trends in the [MIMIC](https://mimic.physionet.org/) dataset. This dataset contains ~60,000 de-identified records of patients admitted to the Beth Israel Deaconess Medical Center from 2001-2012. The data contains information on demographics, vital signs, laboratory tests, and more, but our main focus is on identifying which diseases occur together and how disease prevalence varies across demographics. This dashboard could help hospital administrators understand the health needs of demographic groups in their community. Additionally, it could help physicians identify what preventable chronic diseases are causing more serious conditions. 
 
 # Data Flow
 
