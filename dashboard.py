@@ -22,9 +22,10 @@ import nltk
 from nltk import bigrams
 import itertools
 import pandas as pd
+from IPython.display import HTML
 
 # Use the full page instead of a narrow central column
-#st.set_page_config(layout="wide")
+st.set_page_config(layout="wide")
 
 def matrix_to_df(diagnosis_data, n):
     """
@@ -114,7 +115,7 @@ def topn_diagnoses(diagnosis, n):
 
 #path_to_download_folder = str(os.path.join(Path.home(), "Downloads"))
 
-@st.cache
+@st.cache(show_spinner=False)
 def get_diagnosis_data():
     diagnosis = pd.read_csv("https://mimicdatasets.s3.amazonaws.com/diagnosis.csv")
     # add time stayed in the hospital
@@ -158,52 +159,89 @@ def admit_freq(diagnosis):
     return(admit_total)
 
 
-@st.cache
+@st.cache(show_spinner=False)
 def get_patient_data():
     return pd.read_csv("https://mimicdatasets.s3.amazonaws.com/Patient.csv")
 patients = get_patient_data()
 
-@st.cache
+@st.cache(show_spinner=False)
 def get_admit_data():
     return pd.read_csv("https://mimicdatasets.s3.amazonaws.com/Admit.csv")
 admit = get_admit_data()
 
-@st.cache
 def get_merged_data():
     return pd.merge(diagnosis, patients, on='subject_id', how='left')
 merged_data = get_merged_data()
 
-@st.cache
+@st.cache(show_spinner=False)
 def get_top_diseases():
     data = pd.DataFrame(merged_data.short_title.value_counts())[:30]
     data.columns = ['count']
     return data
 top_diseases = get_top_diseases()
 
-@st.cache
+@st.cache(show_spinner=False)
 def get_top_5_admin_locations():
     return pd.DataFrame(merged_data.admission_location.value_counts())[:5]
 locations = get_top_5_admin_locations()
 
-@st.cache
+@st.cache(show_spinner=False)
 def get_ethnicity():
     return pd.DataFrame(merged_data.ethnicity.value_counts())
 ethnicity = get_ethnicity()
+
+@st.cache(show_spinner=False)
+def add_age(merged_data):
+    merged_data['admittime'] = pd.to_datetime(merged_data['admittime']).dt.date
+    merged_data['dob'] = pd.to_datetime(merged_data['dob']).dt.date
+    merged_data['age_num'] = merged_data.apply(lambda e: (e['admittime'] - e['dob']).days/365, axis=1)
+    # transform age into categorical variable
+    # create a list of our conditions
+    conditions = [
+    (merged_data['age_num'] <= 25),
+    (merged_data['age_num'] > 25) & (merged_data['age_num'] <= 50),
+    (merged_data['age_num'] > 50) & (merged_data['age_num'] <= 75),
+    (merged_data['age_num'] > 75)
+    ]    
+    gender = pd.DataFrame(merged_data.gender.value_counts())
+    gender.index = ['Male', 'Female']
+    fig3 = px.pie(gender, names=gender.index, values='gender')
+    # create a list of the values we want to assign for each condition
+    values = ['25 and Under', '25 to 50', '50 to 75', 'Above 75']
+    # create a new column and use np.select to assign values to it using our lists as arguments
+    merged_data['age'] = np.select(conditions, values)
+    return merged_data
+merged_data_age = add_age(merged_data)
+
+@st.cache(show_spinner=False)
+def demo_disease(ethnicity, gender, age):
+    """
+    Return the top 10 diseases and staylength for selected demographic information
+    Inputs: ethnicity, gender, age
+    Outputs: 10 diagnosis names, staylength
+    """
+    condition = (merged_data_age['age'] == age) & (merged_data_age['ethnicity'] == ethnicity) & (merged_data_age['gender'] == gender)
+    top10diag = pd.DataFrame(merged_data_age[condition]['short_title'].value_counts()[:10])
+    top10diag.columns = ['count']
+    staylength = pd.DataFrame(merged_data_age[condition]['staylength'])
+    staylength.columns = ['staylength']
+    return top10diag, staylength
+
 
 # Change background color
 st.markdown("""
 <style>
 body {
-    color: #fff;
+    color: #000;
     background-color: ##FFFFFF;
 }
 </style>
     """, unsafe_allow_html=True)
 
-@st.cache
+@st.cache(show_spinner=False)
 def get_association_rules_data():
     #load data
-    data = pd.read_csv('Association_Rules.csv')
+    data = pd.read_csv('https://mimicdatasets.s3.amazonaws.com/Association_Rules.csv')
     #drop first, unnamed column
     data = data.drop(columns='Unnamed: 0')
     #drop initial label
@@ -213,14 +251,10 @@ def get_association_rules_data():
 #Layout
 
 #sidebar options
-topic = st.sidebar.radio('Choose Topic to Explore', ('General Trends', 'Demographics ==> Diseases',
+topic = st.sidebar.radio('Choose Topic to Explore', ('General Trends', 'Disease to Demographics',
 
-                                   'Diseases ==> Demographics', 'Co-occurrence of Diseases'))
+                                   'Demographics to Disease', 'Market Basket Analysis', 'Co-occurrence Analysis'))
 
-################################
-#### For testing only
-topic = 'Co-occurrence of Diseases'
-#################################
 
 
 # General Trends Dashboard
@@ -229,14 +263,14 @@ if topic == 'General Trends':
     # About
     expander_bar = st.beta_expander('About')
     expander_bar.markdown("""
-    **Data Source**: MIMIC-III Critical Care Database developed by the MIT Lab for Computational Physiology \n 
+    **Data Source**: MIMIC-III Critical Care Database developed by the MIT Lab for Computational Physiology. \n 
     **Data**: Health-related data of over 40 000 patients who stayed in critical care units in Beth Israel Israel Deaconess Medical Center (Boston, MA) between 2001 and 2012. \n
-    **Python Libraries**: streamlit, pandas, plotly \n
-    **References**: [Streamlit documentation](https://docs.streamlit.io/en/stable/api.html), [Mimic dataset](https://mimic.physionet.org/about/mimic/)
+    **Python Libraries**: Streamlit, Pandas, Plotly, Networkx, Nltk \n
+    **References**: [Streamlit Documentation](https://docs.streamlit.io/en/stable/api.html), [Mimic Dataset](https://mimic.physionet.org/about/mimic/).
     """)
 
     # Display title
-    st.markdown("<h1 style='text-align: center; color: black;'>General Trends of MIMIC Dataset</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; color: black;'>MIMIC Dataset General Trends</h1>", unsafe_allow_html=True)
     # Create first 2 columns to hold graphs
     col1, col2 = st.beta_columns(2)
 
@@ -276,16 +310,118 @@ if topic == 'General Trends':
     ))
     fig4.update_layout(template='ggplot2', title='Patients by Ethnicity')
     col4.plotly_chart(fig4, use_container_width=True)
+    
 #Demographics ==> Diseases Dashboard
-elif topic == 'Demographics ==> Diseases':
+elif topic == 'Disease to Demographics':
     # Display title
-    st.markdown("<h1 style='text-align: center; color: black;'>Demographics to Diseases</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; color: black;'>Disease to Demographics</h1>", unsafe_allow_html=True)
    # Pick a disease and use it to filter the data
     chosen_disease = st.selectbox('Choose a disease:',
                                   sorted(list(set(diagnosis['short_title'].value_counts()[:100].index))))
     filtered_data = filter_data(diagnosis, chosen_disease)
     data_matrix = matrix_to_df(filtered_data, 25)
+    age_data_filtered = filter_data(merged_data_age, chosen_disease)
+    
+    # Group the data by age to create a bar chart
+    age_data_filtered = age_data_filtered.groupby(by='age').agg(
+    Frequency=pd.NamedAgg(column="subject_id", aggfunc="count")
+)
+    age_bar = px.bar(age_data_filtered, labels = {'age':'Age Group', 'value': 'Frequency'}, title = 'Age Distribution')
+    age_bar.update_layout(title_x = .50,showlegend=False)
 
+    #Create first 2 columns to hold graphs
+    col1, col2 = st.beta_columns(2)
+
+    # Plot cooccurrence graph
+    col1.plotly_chart(age_bar, use_container_width=True)
+
+    # Plot admission location frequency
+    admit_loc = px.pie(admit_freq(filtered_data), names='admission_location', values='row_id', title = 'Admission Locations',height = 450, width = 800)
+    admit_loc.update_layout(title_x=.50)
+    col2.plotly_chart(admit_loc, use_container_width=True)
+
+    # Plot hospital stay duration
+    # create columns to store stuff. Each new set of columns is a row.
+    col3, col4 = st.beta_columns(2)
+    stay = px.histogram(filtered_data, x="staylength", title = 'Distribution of Days in the Hospital with ' + chosen_disease, labels = {"staylength":"Days in Hospital", "count": "Frequency"}, width = 800, height = 450)
+    stay.update_layout(title_x = .50)
+    
+    gender = pd.DataFrame(merged_data[merged_data['short_title'] == chosen_disease].gender.value_counts())
+    gender.index = ['Male', 'Female']
+    fig3 = px.pie(gender, names=gender.index, values='gender', title='Gender Distribution')
+    fig3.update_layout(title_x = .50)
+
+    #col3.plotly_chart(stay,height=512,width=512)
+    col3.plotly_chart(fig3, use_container_width=True)
+    # Plot relative disease frequency
+    disease_freq = px.bar(disease_freq(diagnosis, chosen_disease), x='ethnicity', y='row_id', title = 'Percentage of Ethnic Group with ' + chosen_disease, labels = {'ethnicity': 'Ethnicity', 'row_id':'Percentage of Population'},width = 800, height = 450)
+    disease_freq.update_layout(title_x=.50)
+    col4.plotly_chart(disease_freq,use_container_width=True)
+    
+# Demographics to Disease Dashboard
+elif topic == 'Demographics to Disease':
+    # Display title
+    st.markdown("<h1 style='text-align: center; color: black;'>Demographics to Disease</h1>",
+                unsafe_allow_html=True)
+   
+
+    # plot top 10 Most Frequent Diseases for given ethnicity
+    ethnicity = st.selectbox('Choose an ethnicity:', 
+                             sorted(list(merged_data_age.ethnicity.value_counts().index)))
+    gender = st.selectbox('Choose a gender:', 
+                        ['F', 'M'])
+    age = st.selectbox('Choose an age:', 
+                       sorted(list(merged_data_age.age.value_counts().index)))
+    
+    # the dataframe for plotting
+    top10diag, staylength = demo_disease(ethnicity, gender, age)
+    
+     # Create first 2 columns to hold graphs
+    col1, col2 = st.beta_columns(2)
+    
+    # plot top 10 Most Frequent Diseases for given eth, gender and age
+    diag_fig = go.Figure(go.Bar(
+        x=top10diag.index,
+        y=top10diag['count'], marker_color='light blue'
+    ))
+    diag_fig.update_layout(template='ggplot2', title = 'Top 10 Most Frequent Diseases')
+
+    col1.plotly_chart(diag_fig, use_container_width=True)
+    
+    # plot staylength distribution for given eth, gender and age
+    stay_fig = px.histogram(staylength, x="staylength", title = 'Distribution of Days in the Hospital', labels = {"staylength":"Days in Hospital", "count": "Frequency"}, width = 800, height = 450)
+    stay_fig.update_layout(title_x = .50)
+    col2.plotly_chart(stay_fig, use_container_width=True)
+
+# Diseases ==> Demographics Dashboard
+elif topic == 'Market Basket Analysis':
+    # Display title
+    st.markdown("<h1 style='text-align: center; color: black;'>Market Basket Analysis of Diseases</h1>",
+                unsafe_allow_html=True)
+
+    arules = get_association_rules_data()
+    arules = arules.sort_values(by='lift', ascending=False)
+    arules.columns = arules.columns.str.capitalize()
+    arules = arules[1:]
+    
+    fig = go.Figure(data=[go.Table(
+    header=dict(values=list(arules.columns),
+                fill_color='paleturquoise',
+                align='left'),
+    cells=dict(values=[arules.A, arules.B, arules.Support, arules.Confidence, arules.Lift],
+               fill_color='lavender',
+               align='left'))
+])
+
+    st.plotly_chart(fig, use_container_width = True )
+    
+elif topic == 'Co-occurrence Analysis':
+        # Display title
+    st.markdown("<h1 style='text-align: center; color: black;'>Co-occurrence Analysis of Diseases</h1>",
+                unsafe_allow_html=True)
+    chosen_disease = st.selectbox('Choose a disease:',sorted(list(set(diagnosis['short_title'].value_counts()[:100].index))))
+    filtered_data = filter_data(diagnosis, chosen_disease)
+    data_matrix = matrix_to_df(filtered_data, 25)
     # Create graph object and prepare for graphing
     g = nx.from_numpy_matrix(data_matrix.to_numpy())
     pos = nx.fruchterman_reingold_layout(g)
@@ -370,53 +506,9 @@ elif topic == 'Demographics ==> Diseases':
         width=800)
     cooccurrence = go.Figure(data=data,
                              layout=layout)
-    cooccurrence.update_layout(title='Diseases Co-ccurring with ' + str(chosen_disease), title_x=.50)
+    cooccurrence.update_layout(title='Diseases Co-occurring with ' + str(chosen_disease), title_x=.50)
 
-
-
-
-    #Create first 2 columns to hold graphs
-    col1, col2 = st.beta_columns(2)
-
-    # Plot cooccurrence graph
-    col1.plotly_chart(cooccurrence, use_container_width=True)
-
-    # Plot admission location frequency
-    admit_loc = px.pie(admit_freq(filtered_data), names='admission_location', values='row_id', title = 'Admission Locations',height = 450, width = 800)
-    admit_loc.update_layout(title_x=.50)
-    col2.plotly_chart(admit_loc, use_container_width=True)
-
-    # Plot hospital stay duration
-    # create columns to store stuff. Each new set of columns is a row.
-    col3, col4 = st.beta_columns(2)
-    stay = px.histogram(filtered_data, x="staylength", title = 'Distribution of Length of Hospital Stay with ' + chosen_disease, labels = {"staylength":"Length of Hospital Stay", "count": "Frequency"}, width = 800, height = 450)
-    stay.update_layout(title_x = .50)
-
-    #col3.plotly_chart(stay,height=512,width=512)
-    col3.plotly_chart(stay, use_container_width=True)
-    # Plot relative disease frequency
-    disease_freq = px.bar(disease_freq(diagnosis, chosen_disease), x='ethnicity', y='row_id', title = 'Percentage of Population with ' + chosen_disease, labels = {'ethnicity': 'Ethnicity', 'row_id':'Percentage of Population'},width = 800, height = 450)
-    disease_freq.update_layout(title_x=.50)
-    col4.plotly_chart(disease_freq,use_container_width=True)
-# Diseases ==> Demographics Dashboard
-elif topic == 'Diseases ==> Demographics':
-    # Display title
-    st.markdown("<h1 style='text-align: center; color: black;'>Diseases to Demographics </h1>",
-                unsafe_allow_html=True)
-
-# Diseases ==> Demographics Dashboard
-elif topic == 'Co-occurrence of Diseases':
-    # Display title
-    st.markdown("<h1 style='text-align: center; color: black;'>Co-occurrence of Diseases Analysis  </h1>",
-                unsafe_allow_html=True)
-    
-    arules = get_association_rules_data()
-    chosen_disease = st.selectbox('Choose a disease:',
-                                  sorted(list(set(arules.A))))
-    
-    
-    
-    
+    st.plotly_chart(cooccurrence, use_container_width = True)
     
     
     
