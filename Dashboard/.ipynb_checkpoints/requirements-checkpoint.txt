@@ -1,0 +1,10 @@
+numpy
+streamlit
+seaborn
+pandas
+chart_studio
+nltk
+plotly
+matplotlib
+networkx
+ipython

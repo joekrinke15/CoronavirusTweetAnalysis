@@ -4,10 +4,6 @@ import numpy as np
 from pathlib import Path
 import matplotlib.pyplot as plt
 import seaborn as sns
-from IPython.display import Image
-from IPython.core.display import HTML
-import statsmodels.api as sm
-import statsmodels.formula.api as smf
 import plotly.express as px
 import pandas as pd
 import numpy as np
