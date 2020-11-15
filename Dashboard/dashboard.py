@@ -366,11 +366,7 @@ if topic == 'General Trends':
     fig4.update_layout(template='ggplot2', title='Patients by Ethnicity', yaxis_title = 'Frequency', xaxis_title = 'Ethnicity')
     col4.plotly_chart(fig4, use_container_width=True)
     
-<<<<<<< HEAD
 # Disease to demographics
-=======
-# Disease to demographics dashboard
->>>>>>> 3ca16baa0c539f6131aeaa9a3cd038474fb929ed
 elif topic == 'Disease to Demographics':
     # Display title
     st.markdown("<h1 style='text-align: center; color: black;'>Disease to Demographics</h1>", unsafe_allow_html=True)
