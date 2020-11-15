@@ -88,8 +88,10 @@ def gen_matrix(corpus):
 def filter_data(diagnosis, disease):
     """
     Creates a dataframe of people who have a given disease as one of their diagnoses.
-    Inputs: Diagnosis
-    Outputs: Filtered data
+    Inputs: 
+        Diagnosis dataset.
+    Outputs: 
+        Filtered data based on chosen disease.
     """
     filtered_data = diagnosis.loc[diagnosis['subject_id'][diagnosis['short_title'] == disease]]
     return(filtered_data)
@@ -117,6 +119,11 @@ def topn_diagnoses(diagnosis, n):
 
 @st.cache(show_spinner=False)
 def get_diagnosis_data():
+    """
+    Reads in diagnosis data, calculating the length of stay and recategorizing ethnicity.
+    Outputs:
+        Diagnosis: Diagnosis data with new staylength and ethnicity categories.
+    """
     diagnosis = pd.read_csv("https://mimicdatasets.s3.amazonaws.com/diagnosis.csv")
     # add time stayed in the hospital
     diagnosis['staylength']= pd.to_datetime(diagnosis['dischtime']) - pd.to_datetime(diagnosis['admittime'])
@@ -137,7 +144,11 @@ diagnosis = get_diagnosis_data()
 
 def disease_freq(diagnosis, disease):
     """
-    Calculate relative disease frequency by race
+    Calculate relative disease frequency by race.
+        Inputs: 
+        Diagnosis dataset, chosen disease.
+        Outputs: 
+        Relative disease frequency by race.
     """
     ethnic_total = diagnosis.groupby('ethnicity').count()[['row_id']]
     subset_total = filter_data(diagnosis, disease).groupby('ethnicity').count()[['row_id']]
@@ -152,10 +163,14 @@ def disease_freq(diagnosis, disease):
 def admit_freq(diagnosis):
     """
     Calculate where patients are admitted for a given disease. 
+    Inputs:
+        diagnosis: The disease you're interested in.
+    Outputs:
+        admit_total: The relative frequency of admission location for that disease. 
     """
     admit_total = diagnosis.groupby('admission_location').count()[['row_id']]
     admit_total = admit_total.reset_index()
-    admit_total =admit_total.sort_values(by='row_id', ascending=False)
+    admit_total = admit_total.sort_values(by='row_id', ascending=False)
     return(admit_total)
 
 
@@ -166,15 +181,24 @@ patients = get_patient_data()
 
 @st.cache(show_spinner=False)
 def get_admit_data():
+    """
+    Loads in admissions table.
+    """
     return pd.read_csv("https://mimicdatasets.s3.amazonaws.com/Admit.csv")
 admit = get_admit_data()
 
 def get_merged_data():
+    """
+    Merges diagnosis table and admissions table. 
+    """
     return pd.merge(diagnosis, patients, on='subject_id', how='left')
 merged_data = get_merged_data()
 
 @st.cache(show_spinner=False)
 def get_top_diseases():
+    """
+    Returns the top 30 most common diseases from the merged dataset. 
+    """
     data = pd.DataFrame(merged_data.short_title.value_counts())[:30]
     data.columns = ['count']
     return data
@@ -182,16 +206,29 @@ top_diseases = get_top_diseases()
 
 @st.cache(show_spinner=False)
 def get_top_5_admin_locations():
+    """
+    Gets the top 5 admissions locations from the merged dataset. 
+    """
     return pd.DataFrame(merged_data.admission_location.value_counts())[:5]
 locations = get_top_5_admin_locations()
 
 @st.cache(show_spinner=False)
 def get_ethnicity():
+    """
+    Gets the frequency of each ethnic group in the merged dataset. 
+    """
     return pd.DataFrame(merged_data.ethnicity.value_counts())
 ethnicity = get_ethnicity()
 
 @st.cache(show_spinner=False)
 def add_age(merged_data):
+    """
+    Calculates an age column from the admitdate and dob. Group ages into categories.
+    Inputs: 
+        Merged data
+    Outputs:
+        Merged data with age categories added.
+    """
     merged_data['admittime'] = pd.to_datetime(merged_data['admittime']).dt.date
     merged_data['dob'] = pd.to_datetime(merged_data['dob']).dt.date
     merged_data['age_num'] = merged_data.apply(lambda e: (e['admittime'] - e['dob']).days/365, axis=1)
@@ -217,8 +254,10 @@ merged_data_age = add_age(merged_data)
 def demo_disease(ethnicity, gender, age):
     """
     Return the top 10 diseases and staylength for selected demographic information
-    Inputs: ethnicity, gender, age
-    Outputs: 10 diagnosis names, staylength
+    Inputs: 
+        ethnicity, gender, age
+    Outputs: 
+        top 10 diagnosis names, staylength distribution
     """
     condition = (merged_data_age['age'] == age) & (merged_data_age['ethnicity'] == ethnicity) & (merged_data_age['gender'] == gender)
     top10diag = pd.DataFrame(merged_data_age[condition]['short_title'].value_counts()[:10])
@@ -240,6 +279,9 @@ body {
 
 @st.cache(show_spinner=False)
 def get_association_rules_data():
+    """
+    Loads market basket analysis dataframe.
+    """
     #load data
     data = pd.read_csv('https://mimicdatasets.s3.amazonaws.com/Association_Rules.csv')
     #drop first, unnamed column
@@ -416,7 +458,7 @@ elif topic == 'Market Basket Analysis':
     st.plotly_chart(fig, use_container_width = True )
     
 elif topic == 'Co-occurrence Analysis':
-        # Display title
+    # Display title
     st.markdown("<h1 style='text-align: center; color: black;'>Co-occurrence Analysis of Diseases</h1>",
                 unsafe_allow_html=True)
     chosen_disease = st.selectbox('Choose a disease:',sorted(list(set(diagnosis['short_title'].value_counts()[:100].index))))
