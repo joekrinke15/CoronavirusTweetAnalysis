@@ -1,0 +1,11 @@
+# Get patient data
+
+SELECT *
+FROM patients
+
+# Get diagnosis data with admissions data
+
+SELECT *
+FROM diagnoses_icd
+JOIN d_icd_diagnoses ON diagnoses_icd.icd9_code=d_icd_diagnoses.icd9_code
+LEFT JOIN admissions ON admissions.subject_id = diagnoses_icd.subject_id
