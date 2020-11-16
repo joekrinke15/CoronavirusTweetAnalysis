@@ -48,7 +48,7 @@ def gen_matrix(corpus):
     Creates a co-occurrence matrix from a corpus/list.
     
     Inputs:
-        Corpus: A List of list of words.
+        Corpus: A List of lists of words.
     Outputs:
         matrix: A co-occurrence matrix. 
         vocab_index: A list of all the words in the vocabulary.
@@ -161,9 +161,9 @@ def disease_freq(diagnosis, disease):
 # calculate relative disease frequency by admittyp
 def admit_freq(diagnosis):
     """
-    Calculate where patients are admitted for a given disease. 
+    Calculate where patients are admitted.
     Inputs:
-        diagnosis: The disease you're interested in.
+        diagnosis: diagnosis dataset.
     Outputs:
         admit_total: The relative frequency of admission location for that disease. 
     """
@@ -176,13 +176,16 @@ def admit_freq(diagnosis):
 
 @st.cache(show_spinner=False)
 def get_patient_data():
+    """
+    Load in patient table from AWS.
+    """
     return pd.read_csv("https://mimicdatasets.s3.amazonaws.com/Patient.csv")
 patients = get_patient_data()
 
 @st.cache(show_spinner=False)
 def get_admit_data():
     """
-    Loads in admissions table.
+    Loads in admissions table from AWS.
     """
     admit = pd.read_csv("https://mimicdatasets.s3.amazonaws.com/Admit.csv")
     admit['admission_location'] = admit['admission_location'].str.title()
@@ -278,7 +281,7 @@ body {
 </style>
     """, unsafe_allow_html=True)
 
-#@st.cache(show_spinner=False)
+@st.cache(show_spinner=False)
 def get_association_rules_data():
     """
     Loads market basket analysis dataframe.
