@@ -174,12 +174,12 @@ def admit_freq(diagnosis):
     return(admit_total)
 
 
-#@st.cache(show_spinner=False)
+@st.cache(show_spinner=False)
 def get_patient_data():
     return pd.read_csv("https://mimicdatasets.s3.amazonaws.com/Patient.csv")
 patients = get_patient_data()
 
-#@st.cache(show_spinner=False)
+@st.cache(show_spinner=False)
 def get_admit_data():
     """
     Loads in admissions table.
@@ -195,7 +195,7 @@ def get_merged_data(diagnosis):
     return pd.merge(diagnosis, patients, on='subject_id', how='left')
 merged_data = get_merged_data(diagnosis)
 
-#@st.cache(show_spinner=False)
+@st.cache(show_spinner=False)
 def get_top_diseases():
     """
     Returns the top 30 most common diseases from the merged dataset. 
@@ -205,7 +205,7 @@ def get_top_diseases():
     return data
 top_diseases = get_top_diseases()
 
-#@st.cache(show_spinner=False)
+@st.cache(show_spinner=False)
 def get_top_5_admin_locations(merged_data):
     """
     Gets the top 5 admissions locations from the merged dataset. 
@@ -214,7 +214,7 @@ def get_top_5_admin_locations(merged_data):
     return pd.DataFrame(merged_data.admission_location.value_counts())[:5]
 locations = get_top_5_admin_locations(merged_data)
 
-#@st.cache(show_spinner=False)
+@st.cache(show_spinner=False)
 def get_ethnicity():
     """
     Gets the frequency of each ethnic group in the merged dataset. 
@@ -222,7 +222,7 @@ def get_ethnicity():
     return pd.DataFrame(merged_data.ethnicity.value_counts())
 ethnicity = get_ethnicity()
 
-#@st.cache(show_spinner=False)
+@st.cache(show_spinner=False)
 def add_age(merged_data):
     """
     Calculates an age column from the admitdate and dob. Group ages into categories.
@@ -304,7 +304,7 @@ if topic == 'General Trends':
     expander_bar = st.beta_expander('About')
     expander_bar.markdown("""
     **Data Source**: MIMIC-III Critical Care Database developed by the MIT Lab for Computational Physiology. \n 
-    **Data**: Health-related data of over 60,000 patients who stayed in critical care units in Beth Israel Israel Deaconess Medical Center (Boston, MA) between 2001 and 2012. \n
+    **Data**: Health-related data of over 60,000 patients who stayed in critical care units in Beth Israel Deaconess Medical Center (Boston, MA) between 2001 and 2012. \n
     **Python Libraries**: Streamlit, Pandas, Plotly, Networkx, Nltk \n
     **References**: [Streamlit Documentation](https://docs.streamlit.io/en/stable/api.html), [Mimic Dataset](https://mimic.physionet.org/about/mimic/). \n
     **GitHub Repository Link**: [GitHub](https://github.com/joekrinke15/MIMIC-Analysis)
