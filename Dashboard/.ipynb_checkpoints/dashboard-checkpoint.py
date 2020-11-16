@@ -206,7 +206,7 @@ def get_top_diseases():
 top_diseases = get_top_diseases()
 
 #@st.cache(show_spinner=False)
-def get_top_5_admin_locations(merged_data):
+d#ef get_top_5_admin_locations(merged_data):
     """
     Gets the top 5 admissions locations from the merged dataset. 
     """
