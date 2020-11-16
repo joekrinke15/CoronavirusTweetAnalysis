@@ -28,7 +28,7 @@ def matrix_to_df(diagnosis_data, n):
     Creates a co-occurence matrix and converts it to a pandas dataframe.
     Inputs:
         diagnosis_data: A co-occurrence matrix.
-        n: The number of diseases you want ot analyze.
+        n: The number of diseases you want to analyze.
     Outputs:
         pandas_matrix: a dataframe of the co-occurrence matrix.
     """
@@ -91,8 +91,8 @@ def filter_data(diagnosis, disease):
     """
     filtered_data = diagnosis.loc[diagnosis['subject_id'][diagnosis['short_title'] == disease]]
     return(filtered_data)
-@st.cache(show_spinner=False)
 
+@st.cache(show_spinner=False)
 def get_diagnosis_data():
     """
     Reads in diagnosis data, calculating the length of stay and recategorizing ethnicity.
@@ -252,7 +252,6 @@ def add_age(merged_data):
     return merged_data
 merged_data_age = add_age(merged_data)
 
-@st.cache(show_spinner=False)
 def demo_disease(ethnicity, gender, age):
     """
     Return the top 10 diseases and staylength for selected demographic information
