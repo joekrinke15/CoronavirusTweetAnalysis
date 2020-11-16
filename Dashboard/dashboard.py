@@ -250,7 +250,7 @@ def add_age(merged_data):
     # create a new column and use np.select to assign values to it using our lists as arguments
     merged_data['age'] = np.select(conditions, values)
     return merged_data
-merged_data = add_age(merged_data)
+merged_data_age = add_age(merged_data)
 
 def demo_disease(ethnicity, gender, age):
     """
