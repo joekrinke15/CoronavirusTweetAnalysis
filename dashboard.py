@@ -92,7 +92,7 @@ def filter_data(diagnosis, disease):
     filtered_data = diagnosis.loc[diagnosis['subject_id'][diagnosis['short_title'] == disease]]
     return(filtered_data)
 
-#@st.cache(show_spinner=False)
+@st.cache(show_spinner=False)
 def get_diagnosis_data():
     """
     Reads in diagnosis data, calculating the length of stay and recategorizing ethnicity.
@@ -174,12 +174,12 @@ def admit_freq(diagnosis):
     return(admit_total)
 
 
-#@st.cache(show_spinner=False)
+@st.cache(show_spinner=False)
 def get_patient_data():
     return pd.read_csv("https://mimicdatasets.s3.amazonaws.com/Patient.csv")
 patients = get_patient_data()
 
-#@st.cache(show_spinner=False)
+@st.cache(show_spinner=False)
 def get_admit_data():
     """
     Loads in admissions table.
@@ -195,7 +195,7 @@ def get_merged_data(diagnosis):
     return pd.merge(diagnosis, patients, on='subject_id', how='left')
 merged_data = get_merged_data(diagnosis)
 
-#@st.cache(show_spinner=False)
+@st.cache(show_spinner=False)
 def get_top_diseases():
     """
     Returns the top 30 most common diseases from the merged dataset. 
@@ -205,7 +205,7 @@ def get_top_diseases():
     return data
 top_diseases = get_top_diseases()
 
-#@st.cache(show_spinner=False)
+@st.cache(show_spinner=False)
 def get_top_5_admin_locations(merged_data):
     """
     Gets the top 5 admissions locations from the merged dataset. 
@@ -214,7 +214,7 @@ def get_top_5_admin_locations(merged_data):
     return pd.DataFrame(merged_data.admission_location.value_counts())[:5]
 locations = get_top_5_admin_locations(merged_data)
 
-#@st.cache(show_spinner=False)
+@st.cache(show_spinner=False)
 def get_ethnicity():
     """
     Gets the frequency of each ethnic group in the merged dataset. 
@@ -222,7 +222,7 @@ def get_ethnicity():
     return pd.DataFrame(merged_data.ethnicity.value_counts())
 ethnicity = get_ethnicity()
 
-#@st.cache(show_spinner=False)
+@st.cache(show_spinner=False)
 def add_age(merged_data):
     """
     Calculates an age column from the admitdate and dob. Group ages into categories.
@@ -278,7 +278,7 @@ body {
 </style>
     """, unsafe_allow_html=True)
 
-#@st.cache(show_spinner=False)
+@st.cache(show_spinner=False)
 def get_association_rules_data():
     """
     Loads market basket analysis dataframe.
