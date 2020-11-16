@@ -92,7 +92,7 @@ def filter_data(diagnosis, disease):
     filtered_data = diagnosis.loc[diagnosis['subject_id'][diagnosis['short_title'] == disease]]
     return(filtered_data)
 
-#@st.cache(show_spinner=False)
+@st.cache(show_spinner=False)
 def get_diagnosis_data():
     """
     Reads in diagnosis data, calculating the length of stay and recategorizing ethnicity.
