@@ -13,4 +13,4 @@ LEFT JOIN admissions ON admissions.subject_id = diagnoses_icd.subject_id
 # Get admissions table alone
 
 SELECT *
-FROM admit
+FROM admissions
