@@ -1,5 +1,5 @@
 # MIMIC Dataset Analysis
-Project for BIOS 823: Statistical Programming for Big Data
+Project for BIOS 823: Statistical Programming for Big Data at Duke University.
 
 # Team Big Data
 [Alena Kalodzitsa](https://github.com/Klalena), MIDS
