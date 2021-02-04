@@ -17,3 +17,8 @@ The goal of our project is to create a dashboard that analyzes trends in the [MI
 # Data Flow
 
 ![Flowchart](https://raw.githubusercontent.com/joekrinke15/MIMIC-Analysis/master/Readme/Flowchart.png)
+
+# Sample Dashboard Output 
+
+
+![Flowchart](https://raw.githubusercontent.com/joekrinke15/blog/master/img/cooccur.PNG)
