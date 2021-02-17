@@ -1,4 +1,4 @@
-# MIMIC Dataset Analysis
+# MIMIC Dataset Analysis [![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/joekrinke15/mimic-analysis/Dashboard/dashboard.py)
 Project for BIOS 823: Statistical Programming for Big Data at Duke University.
 
 # Team Big Data
